@@ -1,1 +1,1085 @@
-<h1>Hello</h1>
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, user-scalable=0.0" />
+      <meta name="apple-mobile-web-app-capable" content="yes">
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+        <title>Classic Bookworm</title>
+
+        <!-- Fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
+
+        <!-- Styles -->
+        <style>
+          @charset "UTF-8";
+
+@font-face {
+font-family: "Vollkorn";
+font-weight: 400;
+font-style: normal;
+src: url("../font/Vollkorn-Regular.woff2") format("woff2");
+}
+
+@font-face {
+font-family: "Vollkorn";
+font-weight: 400;
+font-style: italic;
+src: url("../font/Vollkorn-Italic.woff2") format("woff2");
+}
+
+@font-face {
+font-family: "Vollkorn";
+font-weight: 500;
+font-style: normal;
+src: url("../font/Vollkorn-Semibold.woff2") format("woff2");
+}
+
+@font-face {
+font-family: "Vollkorn";
+font-weight: 500;
+font-style: italic;
+src: url("../font/Vollkorn-SemiboldItalic.woff2") format("woff2");
+}
+
+*, *:before, *:after {
+box-sizing: border-box;
+text-rendering: optimizelegibility;
+}
+
+:root {
+/* Baseline defaults for all devices */
+--base-unit: 5vh;
+--column-width: 50vw;
+}
+
+@supports (width: clamp(28px, 5vh, 56px)) {
+:root {
+/* Baseline defaults for all devices and browsers that support clamp() */
+/* Edge Chromium on Android has an issue with supporting clamp() for widths */
+--base-unit: clamp(28px, 5vh, 56px);
+--column-width: clamp(480px, 50vw, 640px);
+}
+}
+
+:root {
+--base-unit-half: calc( var(--base-unit) / 2.0 );
+
+--font-size: var(--base-unit-half);
+--line-height: 1.4rem;
+--print-line-height: 1.4rem;
+
+--vertical-padding: var(--base-unit);
+
+/* this 4.0 is a bit cryptic; we are making space for the toc button:; */
+--column-height: calc(100vh - calc(var(--vertical-padding) * 4.0));
+--column-gap: var(--base-unit);
+
+--paper-hue: 100;
+--paper-saturation: 50%;
+--paper-lightness: 99%;
+--paper-color: hsla( var(--paper-hue), var(--paper-saturation), var(--paper-lightness), 1.0 );
+
+/* these are for the "shades" that obscure text on the sides of the screen in wider browsers */
+--shade-color-destination: hsla(var(--paper-hue), var(--paper-saturation), var(--paper-lightness), 0.0);
+--shade-color-origin: hsla(var(--paper-hue), var(--paper-saturation), var(--paper-lightness), 1);
+
+--spot-color: hsla(340, 100%, 50%, 1.0);
+--selection-color: hsla(340, 100%, 75%, 1.0);
+--text-color: rgb(5, 5, 5);
+
+--page-count: 1;
+}
+
+@media(prefers-color-scheme:dark) {
+:root {
+--paper-lightness: 1%;
+--selection-color: hsla(340, 100%, 25%, 1.0);
+--text-color: rgb(250, 250, 250);
+}
+}
+
+::-moz-selection { background: var(--selection-color); }
+::selection { background: var(--selection-color); }
+
+/* reset */
+button {
+outline: none;
+border: none;
+background: none;
+background-color: transparent;
+touch-action: manipulation;
+}
+
+html {
+overflow: hidden; /* the key, always */
+font-size: var(--font-size);
+scroll-behavior: smooth;
+
+/* ss11 gives us the more normal 1 digit */
+font-feature-settings: "kern", "liga", "ss11";
+}
+
+body {
+margin: 0;
+
+height: calc( var(--column-height) + var(--vertical-padding) * 2.0 );
+
+background-color: var(--paper-color);
+padding: var(--vertical-padding) 0 0 0;
+
+overflow-x: auto;
+overflow-y: hidden;
+
+/* to justify or not to justify? */
+text-align: left; /* sigh */
+line-height: var(--line-height);
+
+color: var(--text-color);
+font-family: "Vollkorn", serif;
+font-size: 1rem;
+font-weight: 400;
+
+scroll-snap-type: x mandatory;
+}
+
+button.toc-button {
+display: flex;
+position: fixed;
+bottom: 0;
+
+left: 50vw;
+
+flex-direction: column;
+justify-content: center;
+
+z-index: 100000;
+width: calc( var(--base-unit) * 2.0 );
+height: var(--base-unit);
+
+border: 1px solid var(--text-color);
+background-color: var(--paper-color);
+color: inherit;
+transform: translateX(-50%) translateY(-50%);
+}
+
+button.toc-button:hover {
+border: 1px solid var(--spot-color);
+color: var(--spot-color);
+}
+
+button.toc-button svg {
+fill: currentColor;
+flex-grow: 1;
+}
+
+nav {
+position: fixed;
+
+top: calc( var(--vertical-padding) + var(--base-unit) );
+/* the toc is 90% of the page's width */
+left: calc( 50vw - var(--column-width) * 0.45);
+
+z-index: 10000;
+/* this is all a little bit stupid and I'm sure there's a more
+principled way to do it */
+width: calc( var(--column-width) * 0.9 );
+height: calc( var(--column-height) - var(--base-unit) );
+
+border: 1px solid var(--spot-color);
+
+background-color: hsla(var(--paper-hue), calc(var(--paper-saturation) * 2.0), var(--paper-lightness), 1.0);
+
+overflow-x: hidden;
+overflow-y: hidden;
+
+text-align: left;
+
+transition: opacity 0.1s;
+
+box-shadow: 0 0 var(--base-unit-half) 1px var(--spot-color);
+}
+
+nav.visible {
+opacity: 1.0;
+pointer-events: auto;
+}
+
+nav.invisible {
+opacity: 0.0;
+pointer-events: none;
+}
+
+nav div.toc {
+width: calc( var(--column-width) * 0.9 );
+height: calc( var(--column-height) - var(--base-unit) * 2.0 );
+
+padding: var(--base-unit);
+
+overflow-x: hidden;
+overflow-y: scroll;
+position: relative;
+}
+
+nav div.close-button {
+position: fixed;
+top: calc( var(--vertical-padding) + var(--base-unit) + var(--base-unit));
+right: calc( 50vw + var(--base-unit) - var(--column-width) * 0.45);
+width: var(--base-unit-half);
+height: var(--base-unit-half);
+stroke: var(--spot-color);
+stroke-width: 1px;
+}
+
+nav div.close-button:hover {
+cursor: pointer;
+}
+
+nav div.controls {
+display: flex;
+position: fixed;
+
+/* this is getting a bit silly... */
+top: calc( var(--vertical-padding) +
+         var(--column-height) - var(--base-unit) * 2.0 );
+left: calc( 50vw - var(--column-width) * 0.45);
+
+align-items: center;
+flex-direction: row;
+flex-wrap: nowrap;
+justify-content: center;
+
+width: calc( var(--column-width) * 0.9 );
+height: calc( var(--base-unit) * 2.0 );
+
+border: 1px solid var(--spot-color);
+
+background-color: hsla(var(--paper-hue), calc(var(--paper-saturation) * 2.0), var(--paper-lightness), 1.0);
+
+z-index: 100000;
+}
+
+nav div.controls button {
+flex-shrink: 0;
+
+margin: 0 var(--base-unit-half) 0 0;
+width: var(--base-unit);
+/*line-height: calc( var(--base-unit) * 2.0 );*/
+height: auto;
+
+padding: 0;
+
+cursor: pointer;
+text-align: center;
+color: var(--spot-color);
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+nav div.controls button:last-child {
+margin: 0 0 0 0;
+}
+
+nav div.controls button:hover {
+color: var(--text-color);
+}
+
+nav h1 {
+margin: 0 0 var(--line-height) 0;
+width: calc( var(--column-width) * 0.9 - calc( var(--base-unit) * 2.0 ) );
+padding: 0;
+/* text-transform: uppercase; */
+font-style: italic;
+line-height: var(--line-height);
+font-size: 1rem;
+font-weight: 400;
+}
+
+nav ol {
+margin: 0;
+width: 90%;
+padding: 0;
+list-style-type: none;
+margin-bottom: var(--line-height);
+}
+
+nav ol li {
+margin: 0 0 var(--line-height) 0;
+line-height: var(--line-height);
+font-size: 1rem;
+}
+
+nav ol li:last-of-type {
+margin: 0 0 0 0;
+}
+
+/* GENERAL STYLES */
+
+h2 {
+margin: calc( var(--line-height) * 6.0 ) 0 calc( var(--line-height) * 2.0 ) 0;
+padding: 0;
+line-height: calc( var(--line-height) * 2.0 );
+font-size: 1.5rem;
+font-weight: 500;
+font-style: italic;
+column-break-before: always;
+break-before: column;
+}
+
+a, a:link, a:visited {
+color: var(--spot-color);
+}
+
+a:hover, a:active {
+color: var(--text-color);
+}
+
+p {
+margin: 0;
+padding: 0;
+text-indent: var(--base-unit-half);
+}
+
+span.nobr {
+white-space: nowrap;
+}
+
+p.spacetime {
+margin-top: var(--line-height);
+text-indent: 0;
+}
+
+small {
+text-transform: lowercase;
+font-size: 1.025rem;
+font-variant: small-caps;
+font-variant-caps: small-caps;
+font-feature-settings: "kern", "liga", "ss11", "smcp";
+hyphens: none;
+}
+
+img {
+display: block;
+/* this was sort of interesting but, nah */
+/* transform: translateX( var(--base-unit-half) ); */
+/* width: calc(var(--column-width) + var(--base-unit)); */
+width: var(--column-width);
+height: var(--column-height);
+max-height: var(--column-height);
+
+overflow: hidden;
+-webkit-column-break-before: always;
+-webkit-column-break-inside: avoid;
+
+break-before: column;
+/*max-width: 100%;*/
+mix-blend-mode: multiply;
+object-fit: contain; /* contain? */
+}
+
+hr {
+margin: var(--base-unit) auto var(--base-unit) auto;
+width: 50%;
+border: none;
+border-bottom: 1px solid var(--spot-color);
+break-after: avoid-column;
+/* break-after: column; */
+}
+
+p.last-page {
+break-before: column;
+}
+
+p.last-page::after {
+display: block;
+height: var(--column-height);
+
+content: "";
+}
+
+blockquote {
+margin: 0;
+background-color: rgba(0, 0, 0, 0.125);
+padding: var(--base-unit);
+font-style: italic;
+break-before: avoid-column;
+}
+
+/* BOOK BLOCK LAYOUT */
+
+div.book {
+position: relative;
+
+scroll-snap-align: start;
+column-gap: var(--base-unit);
+column-fill: auto;
+column-count: auto;
+column-width: var(--column-width);
+
+margin: var(--base-unit-half);
+width: var(--column-width); /* must match column-width, or am fucked */
+
+height: var(--column-height);
+}
+
+div.book div.title {
+display: flex;
+flex-direction: column;
+justify-content: center;
+
+width: var(--column-width);
+height: calc( var(--column-height) - 1px ); /* full 100vh was causing an extra page break */
+
+text-align: center;
+/* break-after: column; */
+}
+
+div.book div.title h1 {
+height: auto;
+
+flex-grow: 0;
+margin: 0;
+padding: 0;
+text-transform: lowercase;
+line-height: calc( var(--line-height) * 2.0 );
+
+font-size: 2rem;
+font-weight: 500;
+font-variant: small-caps;
+font-variant-caps: small-caps;
+font-feature-settings: "kern", "liga", "smcp", "ss11";
+
+color: var(--text-color);
+}
+
+div.book div.title h1 span {
+display: block;
+}
+
+div.book div.title h2 {
+flex-grow: 0;
+margin-top: var(--line-height);
+}
+
+div.book h1 {
+height: calc( var(--column-height) - 1px);
+
+margin: 0;
+padding: 0;
+text-transform: lowercase;
+line-height: var(--column-height);
+
+font-size: 2rem;
+font-weight: 500;
+font-variant: small-caps;
+font-variant-caps: small-caps;
+font-feature-settings: "kern", "liga", "smcp", "ss11";
+
+color: var(--spot-color);
+
+text-align: center;
+break-before: column;
+}
+
+/* these are the "shades" that obscure text on the sides of the screen in wider browsers */
+
+/* originally, I had some SVG arrows hanging around but I don't think they're necessary */
+
+/* for svg encoding: https://yoksel.github.io/url-encoder/ */
+/* thus, commented out */
+
+/*svg original:
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 60 90" xml:space="preserve">
+<g>
+<rect x="0" y="0" width="60" height="90" style="fill: rgba(255, 255, 255, 0.75);" />
+<polygon points="30,45 60,30 60,60" style="fill: rgba(0, 0, 0, 0.125);" />
+</g>
+</svg>
+*/
+
+div.book::before {
+content: "";
+position: fixed;
+top: 0;
+z-index: 1000;
+width: calc( ( 100vw - var(--column-width) - var(--base-unit) ) / 2.0 );
+height: 100vh;
+
+/* specific to left shade */
+left: 0;
+background: linear-gradient(to right,
+                          var(--shade-color-origin) 100%,
+                          var(--shade-color-origin) 100%,
+                          var(--shade-color-destination) 100%);
+
+/* i just don't think this is necessary...
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' x='0px' y='0px' width='100%25' height='100%25' viewBox='0 0 60 90' xml:space='preserve'%3E%3Cg%3E%3Crect x='0' y='0' width='60' height='90' style='fill: rgba(255, 255, 255, 0.75);' /%3E%3Cpolygon points='30,45 60,30 60,60' style='fill: rgba(0, 0, 0, 0.125);' /%3E%3C/g%3E%3C/svg%3E");
+*/
+}
+
+div.book::after {
+content: "";
+position: fixed;
+top: 0;
+z-index: 1000;
+width: calc( ( 100vw - var(--column-width) - var(--base-unit) ) / 2.0 );
+height: 100vh;
+
+/* specific to right shade */
+right: 0;
+background: linear-gradient(to left,
+                          var(--shade-color-origin) 100%,
+                          var(--shade-color-origin) 100%,
+                          var(--shade-color-destination) 100%);
+}
+
+/* TO MAKE SNAP-SCROLL WORK ON MOBILE */
+
+/* inspiration:
+https://github.com/jpamental/moby-dick/pull/5/commits/ec022061684ae4c233fba047fb341b41deeead6c */
+
+div.shadow-page-container {
+display: block;
+position: relative;
+/* margin: var(--base-unit-half); */
+width: calc( 100vw * var(--page-count));
+}
+
+div.shadow-page {
+background-color: transparent;
+float: left;
+height: 1px;
+margin-left: 0;
+margin-right: var(--column-gap);
+width: var(--column-width);
+scroll-snap-align: start;
+position: relative;
+z-index: -10;
+}
+
+/* RESPONSIVE STUFF */
+
+@media screen and (max-width: 640px) {
+
+:root {
+--column-width: calc(100vw - var(--base-unit));
+/* this is quite blunt */
+/* but it's to compensate for mobile browser chrome */
+/* maybe there's a more elegant solution? */
+--column-height: 65vh;
+}
+
+/* body {
+height: calc( var(--column-height) + var(--vertical-padding) * 2.0 );
+/* having this set at 100vh was causing that weird mobile slip problem */
+
+/* this is really interesting: */
+/* scroll-snap-type: x mandatory; */
+/* idea from: https://github.com/jpamental/moby-dick/pull/5 */
+/* with thanks to kyle gach */
+/* } */
+
+/* div.shadow-page-container {
+display: block;
+} */
+
+div.book::before, div.book::after {
+display: none;
+}
+
+}
+
+@media screen and (min-width: 640px) {
+
+div.book {
+margin-left: calc(50vw - var(--column-width) / 2.0);
+}
+
+}
+
+/*@media screen and (min-height: 1000px) {
+
+:root {
+--vertical-padding: calc( var(--base-unit) * 2.0 );
+}
+
+/* } */
+
+      </style>
+
+        <!-- Scripts -->
+        <script>
+      function smoothScroll(x) {
+  var startTime = performance.now();
+  var startX = document.body.scrollLeft;
+  var startY = 0;
+
+  // scroll
+  smoothScrollStep({
+    startTime: startTime,
+    startX: startX || 0,
+    startY: 0,
+    x: x || 0,
+    y: 0
+  });
+}
+
+function ease(k) {
+  //return 0.5 * (1 - Math.cos(Math.PI * k));
+  //return 1-(--k)*k*k*k;
+  //return k*k*k*k*k;
+  return (-Math.pow( 2, -10 * k ) + 1 );
+}
+
+const SCROLL_TIME = 200;
+
+function smoothScrollStep(context) {
+  let time = performance.now()
+  let value;
+  let currentX;
+  let elapsed = (time - context.startTime) / SCROLL_TIME;
+
+  // avoid elapsed times higher than one
+  elapsed = elapsed > 1 ? 1 : elapsed;
+
+  // apply easing to elapsed time
+  value = ease(elapsed);
+
+  currentX = context.startX + (context.x - context.startX) * value;
+
+  // document.body.scrollTo(currentX, 0);
+  document.body.scrollLeft = currentX;
+
+  // keep scrolling if we have not reached our destination
+  // this was > 1.0 and that wasn't working for some reason
+  if (Math.abs(currentX - context.x) > 2.0) {
+    requestAnimationFrame(smoothScrollStep.bind(window, context));
+  } else {
+    // other side of possible mobile optimizaton thing
+    // document.body.style.backgroundColor = realColor;
+  }
+}
+
+// snap scroll helper
+// inspired by:
+// https://github.com/jpamental/moby-dick/pull/5/commits/ec022061684ae4c233fba047fb341b41deeead6c
+
+function setupShadowPages() {
+  // is this guaranteed to execute AFTER column layout occurs?
+  // currently: i do not know
+
+  let pageCount = Math.floor( bookElement.scrollWidth / window.innerWidth );
+
+  pageCount += 10; // uhhh :)
+
+  document.documentElement.style.setProperty("--page-count", pageCount);
+
+  let shadowPageContainer = document.querySelector("div.shadow-page-container");
+
+  for (let i = 0; i < pageCount; i++) {
+    let shadowPage = document.createElement("div");
+    shadowPage.innerHTML = " ";
+    shadowPage.className = "shadow-page";
+    shadowPageContainer.appendChild(shadowPage);
+  }
+}
+
+function getComputed(propertyName) {
+  return Number( getComputedStyle(bookElement)
+                .getPropertyValue(propertyName)
+                .replace("px", "") );
+}
+
+function getRect(element) {
+  // Terrible hack for Firefox, which treats getBoundingClientRect as an
+  // inner dimension for some unknown reason.
+  let rects = element.getClientRects();
+  return rects[rects.length - 1]
+}
+
+function turnPageForward() {
+  turnPage(1);
+}
+
+function turnPageBack() {
+  turnPage(-1);
+}
+
+function turnPage(turnDirection) {
+
+  let currentLeftOffset = document.body.scrollLeft;
+
+  let columnWidth = getComputed("column-width");
+  let columnGap = getComputed("column-gap");
+  let columnTotal = columnWidth + columnGap;
+
+  // this was previously Math.floor which was causing problems when
+  // paging backwards
+
+  let closestPageNumber = Math.round( currentLeftOffset / columnTotal ) + turnDirection;
+
+  writePageNumber(closestPageNumber);
+
+  let closestPageEdge = closestPageNumber * columnTotal;
+
+  // aha, but what if we are already AT that page?
+  // 8.0 pixels is a bit of a "magic number"...
+  if ( Math.abs( closestPageEdge - currentLeftOffset) < 8.0 ) {
+    closestPageEdge += columnTotal * turnDirection;
+    writePageNumber( closestPageNumber + 1 ); // hacky
+  }
+
+  // there's got to be a better way to do this...
+  if ( (turnDirection > 0) &&
+       ( getRect(endElement).x < window.innerWidth )
+     ) {
+
+    return;
+  }
+
+  // if we're turning a page, we are navigating away from a chapter title,
+  // so we want to clear this out
+  window.location.hash = "";
+
+  smoothScroll(closestPageEdge);
+}
+
+function turnToPage(pageNumber) {
+  let columnWidth = getComputed("column-width");
+  let columnGap = getComputed("column-gap");
+  let columnTotal = columnWidth + columnGap;
+
+  let pageEdge = pageNumber * columnTotal;
+
+  writePageNumber(pageNumber);
+
+  document.body.scrollLeft = pageEdge;
+}
+
+function turnToAnchor(anchor) {
+  let editedAnchor = "chapter_" + anchor.replace( "#", "" );
+
+  let anchoredHeading = Array.from( document.querySelectorAll("h2") )
+                             .find( heading => {
+                                return heading.getAttribute("id") == editedAnchor;
+                              } );
+
+  anchoredHeading.scrollIntoView();
+
+  let wherePageEdgeShouldBe = ( window.innerWidth - getRect(bookelement).width ) / 2.0;
+  let offset = getRect(anchoredHeading).x - wherePageEdgeShouldBe;
+
+  document.body.scrollLeft += offset;
+}
+
+function setTextScale(scale) {
+  document.documentElement.style.setProperty( "--font-size", `${baseFontSize * scale}px` );
+}
+
+function toggleNav() {
+  if ( navElement.className == "invisible" ) {
+    navElement.className = "visible";
+  } else {
+    navElement.className = "invisible";
+  }
+}
+
+function writePageNumber(pageNumber) {
+  window.localStorage.setItem( "pageNumber", pageNumber );
+}
+
+function readPageNumber() {
+  let pageNumber = Number( window.localStorage.getItem("pageNumber") );
+  if ( pageNumber > 1 ) {
+    console.log(`turning to page ${pageNumber}`)
+    turnToPage(pageNumber); // i'm not TOTALLY sure why i need the +1... oh well
+  }
+}
+
+var bookElement;
+var navElement;
+var endElement;
+var baseFontSize = 18.0;
+var lastMouseDown = Date.now();
+var lastClick = Date.now();
+
+document.addEventListener("DOMContentLoaded", e => {
+
+  bookElement = document.querySelector("div.book");
+  navElement = document.querySelector("nav");
+  endElement = document.querySelector("p.last-page")
+
+  if (window.innerWidth > 0) {
+    setupShadowPages();
+  }
+
+  if (window.location.hash.length > 1) { // > 1, because an empty "#" is length 1
+    turnToAnchor( window.location.hash )
+  } else {
+    readPageNumber();
+  }
+
+  // toc button
+
+  document.querySelector("button.toc-button").addEventListener("click", e => {
+    toggleNav();
+    e.stopPropagation();
+  });
+
+  // cross button
+
+  document.querySelector("div.close-button").addEventListener("click", e => {
+    toggleNav();
+    e.stopPropagation();
+  });
+
+  // toc text size buttons
+
+  document.querySelectorAll("nav div.controls button").forEach(button => {
+    let size = `${baseFontSize * button.dataset.scale}px`;
+    button.style.fontSize = size;
+
+    button.addEventListener("click", e => {
+      setTextScale(e.target.dataset.scale);
+      e.stopPropagation();
+    });
+  });
+
+  // might delete this later, b/c it is possibly ridiculous:
+  // updating the buttons to reflect the "real" base font size
+
+  setTimeout( function(){
+    let realFontSize = Number( getComputedStyle(document.documentElement)
+                              .getPropertyValue("font-size")
+                              .replace("px", "") );
+    console.log(`real font size detected: ${realFontSize}px`);
+
+    document.querySelectorAll("nav div.controls button").forEach(button => {
+      let size = `${realFontSize * button.dataset.scale}px`;
+      button.style.fontSize = size;
+
+      button.addEventListener("click", e => {
+        setTextScale(e.target.dataset.scale);
+        e.stopPropagation();
+      });
+    });
+  }, 1000);
+
+  // toc chapter links
+
+  document.querySelectorAll("nav a").forEach(link => {
+
+    link.addEventListener("click", e => {
+      toggleNav();
+      turnToAnchor( e.target.getAttribute("href") )
+      e.stopPropagation();
+    });
+  });
+
+});
+
+document.addEventListener("keydown", e => {
+  if (event.keyCode === 37) { // left
+    turnPageBack();
+  }
+  if ( (event.keyCode === 39) || (event.keyCode === 32) ) { // right, space
+    turnPageForward();
+  }
+});
+
+document.addEventListener("wheel", e => {
+
+  if (navElement.className == "visible") {
+    return;
+  }
+
+  if ( Math.abs(e.deltaY) > Math.abs(e.deltaX) ) {
+    e.preventDefault();
+    document.body.scrollLeft += e.deltaY;
+  }
+}, { passive: false });
+
+document.addEventListener("mousedown", function(e) {
+  lastMouseDown = Date.now();
+});
+
+// values in millis
+const CLICK_DEBOUNCE_TIME = 50;
+const LONG_PRESS_TIME = 250;
+
+document.addEventListener("click", function(e) {
+
+  let now = Date.now();
+
+  // don't advance on long press (text selection?)
+  if ( (now - lastMouseDown) > LONG_PRESS_TIME ) {
+    return;
+  }
+
+  // don't advance on double-click
+  if ( (now - lastClick) < CLICK_DEBOUNCE_TIME ) {
+    return;
+  }
+
+  lastClick = now;
+
+  // don't advance on link click
+  if (e.target.tagName == "A") {
+    return;
+  }
+
+  // don't advance if we are selecting text
+  if ( window.getSelection().toString().length > 0 ) {
+    return;
+  }
+
+  if ( e.clientX < (window.innerWidth / 3.0) ) {
+    turnPageBack();
+  } else {
+    turnPageForward();
+  }
+});
+
+// hash change detector
+// note: it's a window event, not a document event
+
+window.addEventListener("hashchange", e => {
+  if (window.location.hash.length > 1) {
+    turnToAnchor( window.location.hash )
+  }
+});
+
+      </script>
+
+    </head>
+    <body>
+
+<nav class="invisible">
+<div class="controls">
+  <button data-scale="0.8">A</button>
+  <button data-scale="1.0">A</button>
+  <button data-scale="1.2">A</button>
+  <button data-scale="1.4">A</button>
+  <button data-scale="2.0">A</button>
+</div>
+
+<div class="toc">
+<h1>Table of Contents</h1>
+<div class="close-button">
+  <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 10 10" xml:space="preserve">
+  <g>
+    <line x1="0" y1="0" x2="10" y2="10" vector-effect="non-scaling-stroke" />
+    <line x1="10" y1="0" x2="0" y2="10" vector-effect="non-scaling-stroke" />
+  </g>
+</svg>
+</div>
+<!--web_toc_html-->
+<ol>
+<li><a href="#1">1</a></li>
+<li><a href="#2">2</a></li>
+<li><a href="#3">3</a></li>
+</ol>
+</div>
+</nav>
+
+<div class="print-cover">
+<!--title_html-->
+</div>
+
+<div class="book">
+
+<img class="cover" src="cover_image" alt="" />
+<p>
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin mattis aliquet velit, vitae pharetra odio suscipit id. Phasellus fermentum elit at ante cursus rhoncus. Praesent suscipit nec tortor vitae pharetra. Etiam semper hendrerit risus, ac hendrerit ligula fermentum sit amet. Vestibulum tempus urna et metus bibendum feugiat. Nunc a urna et mauris mollis consequat. Donec hendrerit arcu aliquam nibh sodales, non pretium odio aliquam. Nullam id dapibus elit. Donec ac sapien turpis. Mauris elementum imperdiet enim ut pharetra. Integer id imperdiet odio. Sed at tristique augue. Donec fermentum elit sit amet tincidunt tincidunt. In ut eros metus. Sed mattis lectus sed turpis egestas tincidunt. Maecenas elit risus, ultricies porta laoreet in, tristique et dui.
+</p>
+<p>
+Cras venenatis consequat commodo. Vestibulum scelerisque elit magna, vel mattis risus aliquam ut. Nam et quam mauris. Pellentesque tempor elit at libero molestie, in finibus eros eleifend. Fusce risus eros, scelerisque sed sem et, tristique sodales urna. Nullam a felis est. Quisque at nunc facilisis, cursus libero ut, sagittis purus. Cras egestas ex eu nisi convallis, quis rutrum felis tempus. Sed in condimentum elit. Maecenas in fermentum dui.
+</p>
+<p id='1'>
+Etiam tempor diam neque, vitae consectetur enim eleifend non. Duis sed diam libero. Mauris consequat dolor nec justo molestie tristique non eu est. Praesent tempus ornare dui sed placerat. Mauris lobortis ornare mi, ac faucibus elit feugiat in. Ut hendrerit mauris nisl. Nam eu magna interdum, semper risus at, pellentesque odio. Donec nec elementum diam. Suspendisse ligula dolor, gravida et malesuada eget, blandit in odio. Mauris pulvinar quis turpis eget pulvinar. Pellentesque sapien mi, eleifend id quam ultricies, iaculis semper lectus. Mauris mi neque, bibendum in nisl sit amet, facilisis tristique est. Aliquam erat volutpat. Cras sed mi congue, aliquam metus vel, fringilla purus.
+</p>
+<p>
+Vestibulum cursus turpis ut nisi mollis malesuada. Curabitur facilisis felis eu quam viverra dapibus. Fusce nec auctor est. In hac habitasse platea dictumst. Phasellus quis enim mauris. Duis iaculis maximus porta. Fusce sed nisl hendrerit, sollicitudin magna eget, hendrerit ligula. Morbi venenatis, ligula ut gravida eleifend, risus magna fermentum risus, id rutrum mauris odio quis libero. Praesent luctus nisl at nunc maximus, at molestie lorem pulvinar. Suspendisse tincidunt convallis lacinia. Suspendisse at lacinia nulla. Nullam laoreet ante justo, quis ullamcorper odio bibendum eu. Cras nec ligula ac turpis ultricies aliquet.
+</p>
+<p>
+Donec maximus lacinia turpis, ut eleifend nulla fermentum nec. Donec pretium eros diam, sit amet venenatis lectus condimentum non. Praesent vel dolor aliquam, placerat libero cursus, eleifend diam. Integer lorem odio, egestas vitae tempor a, vestibulum eget dui. Sed in lorem rutrum, consequat purus quis, gravida justo. Morbi a nisl at nunc cursus finibus eu non dui. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Suspendisse vestibulum quam id nisi semper, vehicula auctor eros accumsan. Morbi ligula nisi, sagittis at felis id, feugiat tempus quam. Curabitur sollicitudin sem quis sapien sollicitudin, pulvinar sagittis lorem fermentum.
+</p>
+<p>
+Duis in fringilla turpis. In vel blandit erat, vel gravida dolor. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Maecenas suscipit nisl lectus, in tincidunt ante sagittis convallis. Curabitur vestibulum neque non odio molestie dignissim sed tempor ligula. Quisque sollicitudin mauris turpis, sed vestibulum ligula viverra eu. Donec a ipsum a est feugiat ultrices a id odio. Sed iaculis ex eget velit consectetur dapibus. Nunc porta, erat a fringilla euismod, augue odio ultrices metus, ac mattis diam nisl vel massa. Nullam tincidunt nibh malesuada urna vulputate consectetur. Cras convallis arcu libero, vel volutpat odio eleifend id. Donec consectetur semper odio, ut condimentum est tristique vel. Morbi vel cursus odio, luctus dapibus eros. Morbi vulputate nisl nisi, nec ultrices ligula aliquam at. Ut sed mi ex. Morbi mattis nunc arcu, quis consequat nisi dapibus non.
+</p>
+<p>
+In commodo fringilla leo id convallis. Fusce sagittis lectus massa, a ultrices augue vehicula non. Sed mauris massa, ullamcorper vitae elit a, hendrerit cursus purus. Fusce quis vehicula elit. Sed egestas nec libero a varius. Mauris sed tortor eu elit luctus convallis. Donec lacus quam, lacinia non imperdiet id, congue sagittis enim. Curabitur eget eros pretium, consectetur velit efficitur, aliquet augue. Etiam iaculis fringilla eleifend. Nulla efficitur, dui ut porta scelerisque, tellus tellus facilisis neque, nec tristique velit sem eget leo.
+</p>
+<p>
+Sed dapibus, tortor sed fringilla fringilla, arcu lacus viverra leo, non feugiat ipsum nunc quis tellus. Sed eu ante finibus neque pulvinar porta. Nam justo est, efficitur quis sagittis sed, sollicitudin ut libero. Donec vel tortor diam. Vestibulum eros turpis, pellentesque et tellus quis, gravida fringilla lacus. Nunc et sem et ipsum pretium rutrum ac nec mi. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Phasellus et bibendum elit, at scelerisque erat.
+</p>
+<p>
+Sed molestie nisl ac sapien rhoncus iaculis. Phasellus leo nunc, blandit ut libero sit amet, pulvinar maximus mauris. Ut faucibus auctor eleifend. Phasellus quis volutpat purus. Maecenas aliquam mi lacus, non consectetur felis interdum ac. Suspendisse sed sollicitudin quam. Sed felis eros, iaculis non massa eu, cursus mattis lacus. Fusce hendrerit vehicula felis accumsan dapibus. Sed scelerisque turpis eu lacus accumsan venenatis.
+</p>
+<p>
+Nullam dictum eu est vel dapibus. Ut et posuere libero. Aliquam sit amet augue eget ex vulputate aliquet. Nunc pulvinar tempus turpis, vitae laoreet sem fringilla ut. Morbi venenatis, elit maximus ornare finibus, nunc augue tincidunt massa, non sagittis magna nisi sit amet mi. Donec nisl nulla, fermentum ac risus sit amet, volutpat vehicula quam. Nam iaculis dignissim nunc, non tincidunt lacus egestas quis. Phasellus cursus, ipsum id scelerisque molestie, ante nisl convallis leo, a malesuada nulla enim vitae eros. Integer a ante neque.
+</p>
+<p id="2">
+Nulla ac tincidunt arcu. Mauris nisl justo, semper ut placerat nec, commodo id leo. Integer sit amet convallis nulla. Fusce ac viverra erat. Curabitur lacinia accumsan arcu, sed laoreet velit venenatis ac. Proin maximus quam eu tellus commodo aliquet. Integer mollis, neque vitae condimentum varius, sapien nibh aliquam libero, vel vehicula purus orci eleifend nisi. Nunc facilisis nibh sed nisi ultrices, sed imperdiet mi consequat. Sed ac cursus nibh. Pellentesque at facilisis ipsum, nec semper felis. Phasellus consequat velit id dolor faucibus volutpat. Pellentesque suscipit nec urna quis dapibus. Nulla congue lacinia lacus, vel vestibulum libero vulputate at.
+</p>
+<p>
+Nulla facilisi. Morbi vitae risus ipsum. Sed placerat vel nulla sed bibendum. Duis molestie erat sit amet lobortis eleifend. Donec in ligula nisi. Curabitur tincidunt quam nec nisl vulputate tristique eget eu mi. Vestibulum dignissim blandit lectus in tristique. Aenean quis dolor ac lorem consequat suscipit in ac sem. Integer euismod rutrum nulla, efficitur finibus nisl aliquet vel. Mauris cursus lacus ac velit maximus imperdiet. Integer ultrices quam in convallis mollis. Donec in nulla lacinia, gravida mi eget, lobortis ex. Phasellus nisi felis, porttitor a condimentum non, mattis eu felis. Aenean consectetur, massa sed pellentesque aliquet, risus nunc consequat sem, vel congue augue urna non nibh. Mauris odio tellus, dictum non dignissim quis, efficitur non lectus.
+</p>
+<p>
+Morbi orci lorem, tempus vel posuere sed, suscipit quis elit. Sed quis pretium quam. In feugiat vehicula metus, at aliquet tortor pretium sed. In hac habitasse platea dictumst. Proin magna nunc, rhoncus sit amet gravida vel, malesuada in orci. Suspendisse potenti. Nunc id diam porta, cursus diam tempus, vehicula nisi. Nullam eget ultricies arcu. Fusce eget tincidunt leo.
+</p>
+<p>
+Curabitur neque ex, elementum at ex a, posuere efficitur est. Duis sodales scelerisque velit hendrerit placerat. Phasellus purus lectus, malesuada id consectetur id, posuere quis nunc. Morbi quis sagittis nunc. Ut pharetra fringilla metus, vitae convallis ligula convallis in. Donec in augue et leo iaculis vestibulum. Fusce eget ligula eget turpis fermentum congue. Nullam non justo mauris. Sed aliquet tincidunt elit, id vestibulum ex pharetra vitae. Praesent sed sem tincidunt, placerat justo id, eleifend nunc. Cras tincidunt, velit quis elementum mollis, dui diam convallis diam, ut hendrerit dui nunc eget nibh. Vestibulum non congue libero. Praesent ultricies nec sem quis pellentesque.
+</p>
+<p>
+Aenean vel dui vestibulum, suscipit lacus sed, tristique ex. Vestibulum aliquam risus ipsum, vel venenatis orci varius ac. Etiam diam lorem, pharetra ac massa in, commodo iaculis leo. Sed ultricies velit elit, eu iaculis ante auctor sit amet. Quisque at tellus dui. Aliquam consequat dolor et nunc tincidunt, id volutpat lacus maximus. Integer in ligula vitae nibh tempus mollis eget non magna. Phasellus auctor urna est, sit amet dictum sem lobortis quis. Mauris quis suscipit eros. Sed in bibendum mi. Etiam quis porta nisl.
+</p>
+<p>
+Donec viverra risus justo, quis scelerisque urna feugiat non. Suspendisse arcu ipsum, dignissim sed libero sit amet, mollis luctus lectus. In in malesuada risus. Maecenas hendrerit turpis et justo viverra, interdum vulputate tortor interdum. Mauris condimentum turpis a tortor porttitor, quis semper eros laoreet. Maecenas id est enim. Duis velit libero, dignissim in condimentum in, semper et velit. Duis volutpat odio eu est varius convallis in vitae mauris. Nunc auctor nec diam sit amet egestas. Proin euismod est eu nibh blandit convallis. Duis imperdiet viverra felis, sollicitudin finibus velit interdum et. Donec id dolor sed urna rutrum feugiat nec quis dolor. Ut lacinia in orci non tincidunt. Nulla facilisi. Curabitur quis eros semper, dictum leo sit amet, commodo risus.
+</p>
+<p>
+Aliquam erat volutpat. Duis vel ornare est. Maecenas consectetur tempor mauris et venenatis. Mauris finibus quam et elit fermentum ornare in non nunc. Ut in scelerisque massa, sed viverra odio. Sed at ante et tortor pretium pharetra. Sed ultrices mi est, ut scelerisque turpis interdum vel. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas ut sem finibus felis mollis dictum.
+</p>
+<p id="3">
+Ut pretium tortor nisi, et blandit justo tristique a. Vestibulum consectetur lacus a volutpat imperdiet. Integer ac condimentum odio, sit amet eleifend enim. Nullam sollicitudin nibh et nulla mollis, at malesuada est sagittis. Nullam est tortor, semper non metus vitae, maximus sollicitudin lorem. Nunc purus nibh, feugiat eget viverra ac, imperdiet at justo. Sed et ex quis ante volutpat fringilla. Duis vitae lobortis mauris, id finibus urna.
+</p>
+<p>
+In maximus urna eget iaculis tincidunt. Cras blandit faucibus ullamcorper. Suspendisse imperdiet nibh ac eros mattis, vel iaculis sapien scelerisque. Proin viverra velit dolor. Aliquam eget lobortis risus. Ut vel massa nibh. Nunc vestibulum elit ante, id posuere orci ullamcorper vitae. Nullam posuere, orci sit amet facilisis vulputate, erat sem iaculis nulla, vel tempus massa lacus non lectus. Morbi vel libero at massa cursus fermentum. Mauris sit amet lobortis turpis. Sed a ligula vel odio sagittis elementum. Donec tempus ullamcorper ligula vel gravida. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+</p>
+<p>
+Duis et volutpat justo. Integer vel orci non massa facilisis laoreet. Vivamus eget sapien et ante sagittis fermentum. Vestibulum sed pretium odio. Morbi ut urna eget neque sodales consequat nec quis nulla. Ut a lacus turpis. Phasellus porta lacinia efficitur. Aenean et interdum arcu, at vulputate ligula. Nunc feugiat nisl vel sagittis auctor. Duis finibus dictum purus eget ultrices.
+</p>
+
+<p class="last-page"></p>
+
+<div class="bookmark">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 40 80" xml:space="preserve">
+  <g>
+    <polygon points="0,0 0,80 20,70 40,80 40,0"/>
+  </g>
+</svg>
+</div>
+
+</div>
+
+<div class="shadow-page-container"></div>
+
+<button class="toc-button">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="100%" height="100%" viewBox="0 0 80 40" xml:space="preserve">
+  <g>
+    <rect x="0" y="10" width="5" height="1" />
+    <rect x="0" y="20" width="5" height="1" />
+    <rect x="0" y="30" width="5" height="1" />
+
+    <rect x="10" y="10" width="70" height="1" />
+    <rect x="10" y="20" width="70" height="1" />
+    <rect x="10" y="30" width="70" height="1" />
+  </g>
+</svg>
+</button>
+
+</body>
+
+</html>
+
